@@ -1,0 +1,4 @@
+*.png
+/Character_Generator
+/Old
+.DS_Store

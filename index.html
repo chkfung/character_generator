@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
+    <p>Please select Character Generator Folder</p>
+    <input type="file" id="selectFiles" onchange="initializeCharacterAssetsFolder()" multiple webkitdirectory />
+    <br />
+    <div id="selection"></div>
+    <p>Right click to save</p>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const resolution = ["16x16", "32x32", "48x48"]
+        const bodyType = ["Bodies"]
+        var bodies = [[], [], []];
+        var outfit = [[], [], []];
+        var hair = [[], [], []];
+        var eyes = [[], [], []];
+        var accessories = [[], [], []];
+
+        // Outfit 
+        // 896x656
+        // 1792x1312
+        // 2688x1968
+
+        // Body
+        // 1854x1312
+        // 1854x1312
+        // 2781x1968
+        var assetSizeMultiplier = [2, 1, 1]
+
+        var selectedSize = 0;
+        var selectedBody = 0;
+        var selectedOutfit = 0;
+        var selectedHair = 0;
+        var selectedEye = 0;
+        var selectedAccessories = 0;
+
+        function initializeCharacterAssetsFolder() {
+            var selectedFiles = document.getElementById("selectFiles").files;
+            for (var file of selectedFiles) {
+                composeResource(file);
+            }
+            sort();
+            initializeOptions();
+            draw()
+        }
+
+        function sort() {
+            bodies.forEach(sortInnerArr);
+            outfit.forEach(sortInnerArr);
+            hair.forEach(sortInnerArr);
+            eyes.forEach(sortInnerArr);
+            accessories.forEach(sortInnerArr);
+        }
+
+        function sortInnerArr(arr) {
+            arr.sort(function (a, b) { return a.name.localeCompare(b.name) });
+        }
+
+        function initializeOptions() {
+            var div = document.getElementById("selection");
+            div.appendChild(renderOption(resolution, "selectSize", function (e) {
+                selectedSize = e.target.selectedIndex;
+                draw();
+            }));
+            div.appendChild(renderOption(bodies[selectedSize].map(x => x.name), "selectBody", function (e) {
+                selectedBody = e.target.selectedIndex;
+                draw();
+            }));
+            div.appendChild(renderOption(outfit[selectedSize].map(x => x.name), "selectOutfit", function (e) {
+                selectedOutfit = e.target.selectedIndex;
+                draw();
+            }));
+            div.appendChild(renderOption(hair[selectedSize].map(x => x.name), "selectHair", function (e) {
+                selectedHair = e.target.selectedIndex;
+                draw();
+            }));
+            div.appendChild(renderOption(eyes[selectedSize].map(x => x.name), "selectEye", function (e) {
+                selectedEye = e.target.selectedIndex;
+                draw();
+            }));
+            div.appendChild(renderOption(accessories[selectedSize].map(x => x.name), "selectAccs", function (e) {
+                selectedAccessories = e.target.selectedIndex;
+                draw();
+            }));
+        }
+
+        function renderOption(options, elementId, onChangeEvent) {
+            var select = document.createElement("select");
+            select.addEventListener('change', onChangeEvent);
+            for (var i = 0; i < options.length; i++) {
+                var opt = options[i];
+                var el = document.createElement("option");
+                el.textContent = opt;
+                el.value = opt;
+                select.appendChild(el);
+            }
+            return select;
+        }
+
+        function composeResource(file) {
+            var path = file.webkitRelativePath.split("/");
+            switch (path[1]) {
+                case "Bodies":
+                    generateResource(bodies, path, file);
+                    break;
+                case "Hairstyles":
+                    generateResource(hair, path, file);
+                    break;
+                case "Eyes":
+                    generateResource(eyes, path, file);
+                    break;
+                case "Outfits":
+                    generateResource(outfit, path, file);
+                    break;
+                case "Accessories":
+                    generateResource(accessories, path, file);
+                    break;
+            }
+        }
+
+        function generateResource(arr, path, file) {
+            switch (path[2]) {
+                case "16x16":
+                    arr[0].push(file);
+                    break;
+                case "32x32":
+                    arr[1].push(file);
+                    break;
+                case "48x48":
+                    arr[2].push(file);
+                    break;
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            var imgPath = [];
+            if (selectedBody >= 0)
+                imgPath.push(bodies[selectedSize][selectedBody].webkitRelativePath);
+            if (selectedOutfit >= 0)
+                imgPath.push(outfit[selectedSize][selectedOutfit].webkitRelativePath);
+            if (selectedHair >= 0)
+                imgPath.push(hair[selectedSize][selectedHair].webkitRelativePath);
+            if (selectedEye >= 0)
+                imgPath.push(eyes[selectedSize][selectedEye].webkitRelativePath);
+            if (selectedAccessories >= 0)
+                imgPath.push(accessories[selectedSize][selectedAccessories].webkitRelativePath);
+            render(imgPath, 0)
+        };
+
+        function render(imagePath, index) {
+            if (index >= imagePath.length)
+                return;
+            var img = new Image();
+            img.src = imagePath[index];
+            img.onload = function () {
+                if (index == 0) {
+                    canvas.width = this.naturalWidth;
+                    canvas.height = this.naturalHeight;
+                    ctx.drawImage(this, 0, 0);
+                } else {
+                    var width = (canvas.width / canvas.height) * this.naturalHeight;
+                    ctx.drawImage(this, 0, 0, this.naturalWidth * assetSizeMultiplier[selectedSize], this.naturalHeight * assetSizeMultiplier[selectedSize]);
+                }
+                render(imagePath, index + 1);
+            }
+        }
+    </script>
+
+</body>
+
+</html>
