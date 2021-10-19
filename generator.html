@@ -1,10 +1,23 @@
 <!DOCTYPE html>
 <html>
 
-<body>
+<body class="dark-mode">
 
-    <p>Please select Character Generator Folder</p>
-    <input type="file" id="selectFiles" onchange="initializeCharacterAssetsFolder()" multiple webkitdirectory />
+    <button style="position:absolute; right: 0;" onclick="toggleDarkMode()">Toggle dark mode</button>
+    <br />
+
+    <details>
+        <summary>Instructions:</summary>
+        <p>1. Ensure Generator.html is located in Modern_Interiors/2_Characters folder</p>
+        <p>2. Open Generator.html</p>
+        <p>3. Click Choose files to import the assets</p>
+        <p>4. Voila!</p>
+    </details>
+    <br />
+    <label class="btn btn-primary">Select Character_Generator =>
+        <input type="file" id="selectFiles" onchange="initializeCharacterAssetsFolder()" multiple webkitdirectory />
+    </label>
+    <br />
     <br />
     <div id="selection"></div>
     <p>Right click to save</p>
@@ -32,21 +45,25 @@
         // 2781x1968
         var assetSizeMultiplier = [2, 1, 1]
 
-        var selectedSize = 0;
-        var selectedBody = 0;
-        var selectedOutfit = 0;
-        var selectedHair = 0;
+        var selectedSize = 2;
+        var selectedBody = 1;
+        var selectedOutfit = 1;
+        var selectedHair = 1;
         var selectedEye = 0;
         var selectedAccessories = 0;
 
         function initializeCharacterAssetsFolder() {
-            var selectedFiles = document.getElementById("selectFiles").files;
+            var selectedFiles = Array.from(document.getElementById("selectFiles").files).map(element => ({
+                name: element.name,
+                path: element.webkitRelativePath
+            }));
             for (var file of selectedFiles) {
                 composeResource(file);
             }
             sort();
             initializeOptions();
-            draw()
+
+            draw();
         }
 
         function sort() {
@@ -59,51 +76,59 @@
 
         function sortInnerArr(arr) {
             arr.sort(function (a, b) { return a.name.localeCompare(b.name) });
+            arr.splice(0, 0, { name: "n/a", path: "" });
         }
 
         function initializeOptions() {
             var div = document.getElementById("selection");
-            div.appendChild(renderOption(resolution, "selectSize", function (e) {
+            while (div.firstChild)
+                div.removeChild(div.firstChild);
+            div.appendChild(renderOption(resolution, "selectSize", selectedSize, function (e) {
                 selectedSize = e.target.selectedIndex;
+                // draw();
+                initializeOptions();
+
                 draw();
             }));
-            div.appendChild(renderOption(bodies[selectedSize].map(x => x.name), "selectBody", function (e) {
+            div.appendChild(renderOption(bodies[selectedSize].map(x => x.name), "selectBody", selectedBody, function (e) {
                 selectedBody = e.target.selectedIndex;
                 draw();
             }));
-            div.appendChild(renderOption(outfit[selectedSize].map(x => x.name), "selectOutfit", function (e) {
+            div.appendChild(renderOption(outfit[selectedSize].map(x => x.name), "selectOutfit", selectedOutfit, function (e) {
                 selectedOutfit = e.target.selectedIndex;
                 draw();
             }));
-            div.appendChild(renderOption(hair[selectedSize].map(x => x.name), "selectHair", function (e) {
+            div.appendChild(renderOption(hair[selectedSize].map(x => x.name), "selectHair", selectedHair, function (e) {
                 selectedHair = e.target.selectedIndex;
                 draw();
             }));
-            div.appendChild(renderOption(eyes[selectedSize].map(x => x.name), "selectEye", function (e) {
+            div.appendChild(renderOption(eyes[selectedSize].map(x => x.name), "selectEye", selectedEye, function (e) {
                 selectedEye = e.target.selectedIndex;
                 draw();
             }));
-            div.appendChild(renderOption(accessories[selectedSize].map(x => x.name), "selectAccs", function (e) {
+            div.appendChild(renderOption(accessories[selectedSize].map(x => x.name), "selectAccs", selectedAccessories, function (e) {
                 selectedAccessories = e.target.selectedIndex;
                 draw();
             }));
         }
 
-        function renderOption(options, elementId, onChangeEvent) {
+        function renderOption(options, elementId, initialIndex, onChangeEvent) {
             var select = document.createElement("select");
+            select.size = 15;
             select.addEventListener('change', onChangeEvent);
             for (var i = 0; i < options.length; i++) {
                 var opt = options[i];
                 var el = document.createElement("option");
                 el.textContent = opt;
                 el.value = opt;
+                el.selected = initialIndex == i;
                 select.appendChild(el);
             }
             return select;
         }
 
         function composeResource(file) {
-            var path = file.webkitRelativePath.split("/");
+            var path = file.path.split("/");
             switch (path[1]) {
                 case "Bodies":
                     generateResource(bodies, path, file);
@@ -140,16 +165,16 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             var imgPath = [];
-            if (selectedBody >= 0)
-                imgPath.push(bodies[selectedSize][selectedBody].webkitRelativePath);
-            if (selectedOutfit >= 0)
-                imgPath.push(outfit[selectedSize][selectedOutfit].webkitRelativePath);
-            if (selectedHair >= 0)
-                imgPath.push(hair[selectedSize][selectedHair].webkitRelativePath);
-            if (selectedEye >= 0)
-                imgPath.push(eyes[selectedSize][selectedEye].webkitRelativePath);
-            if (selectedAccessories >= 0)
-                imgPath.push(accessories[selectedSize][selectedAccessories].webkitRelativePath);
+            if (selectedBody > 0)
+                imgPath.push(bodies[selectedSize][selectedBody].path);
+            if (selectedOutfit > 0)
+                imgPath.push(outfit[selectedSize][selectedOutfit].path);
+            if (selectedHair > 0)
+                imgPath.push(hair[selectedSize][selectedHair].path);
+            if (selectedEye > 0)
+                imgPath.push(eyes[selectedSize][selectedEye].path);
+            if (selectedAccessories > 0)
+                imgPath.push(accessories[selectedSize][selectedAccessories].path);
             render(imgPath, 0)
         };
 
@@ -170,8 +195,29 @@
                 render(imagePath, index + 1);
             }
         }
+
     </script>
 
+    <script>
+
+        function toggleDarkMode() {
+            var element = document.body;
+            element.classList.toggle("dark-mode");
+        }
+    </script>
 </body>
+<style>
+    body {
+        padding: 25px;
+        background-color: white;
+        color: black;
+        font-size: 25px;
+    }
+
+    .dark-mode {
+        background-color: black;
+        color: white;
+    }
+</style>
 
 </html>
