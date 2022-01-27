@@ -3,132 +3,105 @@
 
 <body class="dark-mode">
 
-    <button style="position:absolute; right: 0;" onclick="toggleDarkMode()">Toggle dark mode</button>
-    <br />
+<button style="position:absolute; right: 0;" onclick="toggleDarkMode()">Toggle dark mode</button>
+<br/>
 
-    <details>
-        <summary>Instructions:</summary>
-        <p>1. Ensure Generator.html is located in Modern_Interiors/2_Characters folder</p>
-        <p>2. Open Generator.html</p>
-        <p>3. Click Choose files to import the assets</p>
-        <p>4. Voila!</p>
-    </details>
-    <br />
-    <label class="btn btn-primary">Select Character_Generator =>
-        <input type="file" id="selectFiles" onchange="initializeCharacterAssetsFolder()" multiple webkitdirectory />
-    </label>
-    <br />
-    <br />
-    <div id="selection"></div>
-    <p>Right click to save</p>
-    <canvas id="canvas"></canvas>
+<details>
+    <summary>Instructions:</summary>
+    <p>1. Ensure Generator.html is located in Modern_Interiors/2_Characters folder</p>
+    <p>2. Open Generator.html</p>
+    <p>3. Click Choose files to import the assets</p>
+    <p>4. Voila!</p>
+</details>
+<br/>
+<label class="btn btn-primary">Select Character_Generator =>
+    <input type="file" id="selectFiles" onchange="initializeCharacterAssetsFolder()" multiple webkitdirectory/>
+</label>
+<br/>
+<br/>
+<div id="selection"></div>
+<p>Right click to save</p>
+<canvas id="canvas"></canvas>
 
-    <script>
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext("2d");
-        const resolution = ["16x16", "32x32", "48x48"]
-        const bodyType = ["Bodies"]
-        var bodies = [[], [], []];
-        var outfit = [[], [], []];
-        var hair = [[], [], []];
-        var eyes = [[], [], []];
-        var accessories = [[], [], []];
+<script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const resolution = ["16x16", "32x32", "48x48"]
+    const bodyType = ["Bodies", "Kids"]
 
-        // Outfit 
-        // 896x656
-        // 1792x1312
-        // 2688x1968
 
-        // Body
-        // 927 × 656
-        // 1854x1312
-        // 2781x1968
-        var assetSizeMultiplier = [1, 1, 1]
+    var bodies = [[], [], []];
+    var outfit = [[], [], []];
+    var hair = [[], [], []];
+    var eyes = [[], [], []];
+    var accessories = [[], [], []];
 
-        var selectedSize = 2;
-        var selectedBody = 1;
-        var selectedOutfit = 1;
-        var selectedHair = 1;
-        var selectedEye = 0;
-        var selectedAccessories = 0;
 
-        function initializeCharacterAssetsFolder() {
-            var selectedFiles = Array.from(document.getElementById("selectFiles").files).map(element => ({
-                name: element.name,
-                path: element.webkitRelativePath
-            }));
-            for (var file of selectedFiles) {
-                composeResource(file);
-            }
-            sort();
-            initializeOptions();
+    // Outfit
+    // 896x656
+    // 1792x1312
+    // 2688x1968
 
-            draw();
+    // Body
+    // 927 × 656
+    // 1854x1312
+    // 2781x1968
+    var assetSizeMultiplier = [1, 1, 1]
+
+
+    var selectedSize = 2;
+    var selectedBodyType = 0;
+
+    var selectedBody = 1;
+    var selectedOutfit = 1;
+    var selectedHair = 1;
+    var selectedEye = 0;
+    var selectedAccessories = 0;
+
+
+
+    function initializeCharacterAssetsFolder() {
+        var selectedFiles = Array.from(document.getElementById("selectFiles").files).map(element => ({name: element.name, path: element.webkitRelativePath}));
+        for (var file of selectedFiles) {
+            composeResource(file);
+        }
+        sort();
+        initializeOptions();
+        draw();
+    }
+
+    //Remove all the select options & overload the functions to reload the options and canvas with the new options
+    function removeAllChildNodes(parent) {
+
+        while (parent.lastChild) {
+            parent.removeChild(parent.firstChild);
         }
 
-        function sort() {
-            bodies.forEach(sortInnerArr);
-            outfit.forEach(sortInnerArr);
-            hair.forEach(sortInnerArr);
-            eyes.forEach(sortInnerArr);
-            accessories.forEach(sortInnerArr);
-        }
+        // needs to be reset to avoid Array Out of Bounds
+        resetSelectValues();
+        initializeCharacterAssetsFolder();
+    }
 
-        function sortInnerArr(arr) {
-            arr.sort(function (a, b) { return a.name.localeCompare(b.name) });
-            arr.splice(0, 0, { name: "n/a", path: "" });
-        }
+    function resetSelectValues(){
 
-        function initializeOptions() {
-            var div = document.getElementById("selection");
-            while (div.firstChild)
-                div.removeChild(div.firstChild);
-            div.appendChild(renderOption(resolution, "selectSize", selectedSize, function (e) {
-                selectedSize = e.target.selectedIndex;
-                // draw();
-                initializeOptions();
+        bodies = [[], [], []];
+        outfit = [[], [], []];
+        hair = [[], [], []];
+        eyes = [[], [], []];
+        accessories = [[], [], []];
 
-                draw();
-            }));
-            div.appendChild(renderOption(bodies[selectedSize].map(x => x.name), "selectBody", selectedBody, function (e) {
-                selectedBody = e.target.selectedIndex;
-                draw();
-            }));
-            div.appendChild(renderOption(outfit[selectedSize].map(x => x.name), "selectOutfit", selectedOutfit, function (e) {
-                selectedOutfit = e.target.selectedIndex;
-                draw();
-            }));
-            div.appendChild(renderOption(hair[selectedSize].map(x => x.name), "selectHair", selectedHair, function (e) {
-                selectedHair = e.target.selectedIndex;
-                draw();
-            }));
-            div.appendChild(renderOption(eyes[selectedSize].map(x => x.name), "selectEye", selectedEye, function (e) {
-                selectedEye = e.target.selectedIndex;
-                draw();
-            }));
-            div.appendChild(renderOption(accessories[selectedSize].map(x => x.name), "selectAccs", selectedAccessories, function (e) {
-                selectedAccessories = e.target.selectedIndex;
-                draw();
-            }));
-        }
 
-        function renderOption(options, elementId, initialIndex, onChangeEvent) {
-            var select = document.createElement("select");
-            select.size = 15;
-            select.addEventListener('change', onChangeEvent);
-            for (var i = 0; i < options.length; i++) {
-                var opt = options[i];
-                var el = document.createElement("option");
-                el.textContent = opt;
-                el.value = opt;
-                el.selected = initialIndex == i;
-                select.appendChild(el);
-            }
-            return select;
-        }
+        selectedBody = 1;
+        selectedOutfit = 1;
+        selectedHair = 1;
+        selectedEye = 0;
+        selectedAccessories = 0;
+    }
 
-        function composeResource(file) {
-            var path = file.path.split("/");
+    function composeResource(file) {
+        var path = file.path.split("/");
+
+        if (selectedBodyType == 0) {
             switch (path[1]) {
                 case "Bodies":
                     generateResource(bodies, path, file);
@@ -145,66 +118,160 @@
                 case "Accessories":
                     generateResource(accessories, path, file);
                     break;
+
+            }
+        } else if (selectedBodyType == 1) {
+            switch (path[1]) {
+                case "Bodies_kids":
+                    generateResource(bodies, path, file);
+                    break;
+                case "Hairstyles_kids":
+                    generateResource(hair, path, file);
+                    break;
+                case "Eyes_kids":
+                    generateResource(eyes, path, file);
+                    break;
+                case "Outfits_kids":
+                    generateResource(outfit, path, file);
+                    break;
             }
         }
+    }
 
-        function generateResource(arr, path, file) {
-            switch (path[2]) {
-                case "16x16":
-                    arr[0].push(file);
-                    break;
-                case "32x32":
-                    arr[1].push(file);
-                    break;
-                case "48x48":
-                    arr[2].push(file);
-                    break;
+    function sort() {
+        bodies.forEach(sortInnerArr);
+        outfit.forEach(sortInnerArr);
+        hair.forEach(sortInnerArr);
+        eyes.forEach(sortInnerArr);
+        accessories.forEach(sortInnerArr);
+
+    }
+
+    function sortInnerArr(arr) {
+        arr.sort(function (a, b) {
+            return a.name.localeCompare(b.name)
+        });
+        arr.splice(0, 0, {name: "n/a", path: ""});
+    }
+
+    function initializeOptions() {
+        var div = document.getElementById("selection");
+
+        div.appendChild(renderOption(resolution, "selectSize", selectedSize, function (e) {
+            selectedSize = e.target.selectedIndex;
+            draw();
+        }));
+
+        div.appendChild(renderOption(bodyType, "selectType", selectedBodyType, function (e) {
+            selectedBodyType = e.target.selectedIndex;
+            removeAllChildNodes(div);
+        }));
+
+        div.appendChild(renderOption(bodies[selectedSize].map(x => x.name), "selectBody", selectedBody, function (e) {
+            selectedBody = e.target.selectedIndex;
+            draw();
+        }));
+
+        div.appendChild(renderOption(outfit[selectedSize].map(x => x.name), "selectOutfit", selectedOutfit, function (e) {
+            selectedOutfit = e.target.selectedIndex;
+            draw();
+        }));
+
+        div.appendChild(renderOption(hair[selectedSize].map(x => x.name), "selectHair", selectedHair, function (e) {
+            selectedHair = e.target.selectedIndex;
+            draw();
+        }));
+
+        div.appendChild(renderOption(eyes[selectedSize].map(x => x.name), "selectEye", selectedEye, function (e) {
+            selectedEye = e.target.selectedIndex;
+            draw();
+        }));
+
+        if (selectedBodyType != 1) {
+            div.appendChild(renderOption(accessories[selectedSize].map(x => x.name), "selectAccs", selectedAccessories, function (e) {
+                selectedAccessories = e.target.selectedIndex;
+                draw();
+            }));
+            div.appendChild(renderOption(accessories[selectedSize].map(x => x.name), "selectBabyBodies", selectedAccessories, function (e) {
+                selectedAccessories = e.target.selectedIndex;
+                draw();
+            }));
+        }
+    }
+
+    function renderOption(options, elementId, initialIndex, onChangeEvent) {
+        var select = document.createElement("select");
+        select.size = 15;
+        select.addEventListener('change', onChangeEvent);
+        for (var i = 0; i < options.length; i++) {
+            var opt = options[i];
+            var el = document.createElement("option");
+            el.textContent = opt;
+            el.value = opt;
+            el.selected = initialIndex == i;
+            select.appendChild(el);
+        }
+        return select;
+    }
+
+
+    function generateResource(arr, path, file) {
+        switch (path[2]) {
+            case "16x16":
+                arr[0].push(file);
+                break;
+            case "32x32":
+                arr[1].push(file);
+                break;
+            case "48x48":
+                arr[2].push(file);
+                break;
+        }
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        var imgPath = [];
+        if (selectedBody > 0)
+            imgPath.push(bodies[selectedSize][selectedBody].path);
+        if (selectedOutfit > 0)
+            imgPath.push(outfit[selectedSize][selectedOutfit].path);
+        if (selectedHair > 0)
+            imgPath.push(hair[selectedSize][selectedHair].path);
+        if (selectedEye > 0)
+            imgPath.push(eyes[selectedSize][selectedEye].path);
+        if (selectedAccessories > 0)
+            imgPath.push(accessories[selectedSize][selectedAccessories].path);
+        render(imgPath, 0)
+    };
+
+    function render(imagePath, index) {
+        if (index >= imagePath.length)
+            return;
+        var img = new Image();
+        img.src = imagePath[index];
+        img.onload = function () {
+            if (index == 0) {
+                canvas.width = this.naturalWidth;
+                canvas.height = this.naturalHeight;
+                ctx.drawImage(this, 0, 0);
+            } else {
+                var width = (canvas.width / canvas.height) * this.naturalHeight;
+                ctx.drawImage(this, 0, 0, this.naturalWidth * assetSizeMultiplier[selectedSize], this.naturalHeight * assetSizeMultiplier[selectedSize]);
             }
+            render(imagePath, index + 1);
         }
+    }
 
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            var imgPath = [];
-            if (selectedBody > 0)
-                imgPath.push(bodies[selectedSize][selectedBody].path);
-            if (selectedOutfit > 0)
-                imgPath.push(outfit[selectedSize][selectedOutfit].path);
-            if (selectedHair > 0)
-                imgPath.push(hair[selectedSize][selectedHair].path);
-            if (selectedEye > 0)
-                imgPath.push(eyes[selectedSize][selectedEye].path);
-            if (selectedAccessories > 0)
-                imgPath.push(accessories[selectedSize][selectedAccessories].path);
-            render(imgPath, 0)
-        };
+</script>
 
-        function render(imagePath, index) {
-            if (index >= imagePath.length)
-                return;
-            var img = new Image();
-            img.src = imagePath[index];
-            img.onload = function () {
-                if (index == 0) {
-                    canvas.width = this.naturalWidth;
-                    canvas.height = this.naturalHeight;
-                    ctx.drawImage(this, 0, 0);
-                } else {
-                    var width = (canvas.width / canvas.height) * this.naturalHeight;
-                    ctx.drawImage(this, 0, 0, this.naturalWidth * assetSizeMultiplier[selectedSize], this.naturalHeight * assetSizeMultiplier[selectedSize]);
-                }
-                render(imagePath, index + 1);
-            }
-        }
+<script>
 
-    </script>
-
-    <script>
-
-        function toggleDarkMode() {
-            var element = document.body;
-            element.classList.toggle("dark-mode");
-        }
-    </script>
+    function toggleDarkMode() {
+        var element = document.body;
+        element.classList.toggle("dark-mode");
+    }
+</script>
 </body>
 <style>
     body {
