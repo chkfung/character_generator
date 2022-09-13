@@ -20,6 +20,14 @@
 <br/>
 <br/>
 <div id="selection"></div>
+<div class="randomize" hidden>
+    <button onclick="randomize()">Randomize</button>
+    Body: <input type="checkbox" name="Body" checked/>
+    Outfit: <input type="checkbox" name="Outfit" checked/>
+    Hair: <input type="checkbox" name="Hair" checked/>
+    Eyes: <input type="checkbox" name="Eyes" checked/>
+    Accs: <input type="checkbox" name="Accs" checked/>
+</div>
 <p>Right click to save</p>
 <canvas id="canvas"></canvas>
 
@@ -67,6 +75,7 @@
         }
         sort();
         initializeOptions();
+        showRandomizeButton();
         draw();
     }
 
@@ -192,15 +201,12 @@
                 selectedAccessories = e.target.selectedIndex;
                 draw();
             }));
-            div.appendChild(renderOption(accessories[selectedSize].map(x => x.name), "selectBabyBodies", selectedAccessories, function (e) {
-                selectedAccessories = e.target.selectedIndex;
-                draw();
-            }));
         }
     }
 
     function renderOption(options, elementId, initialIndex, onChangeEvent) {
         var select = document.createElement("select");
+        select.id = elementId;
         select.size = 15;
         select.addEventListener('change', onChangeEvent);
         for (var i = 0; i < options.length; i++) {
@@ -214,6 +220,46 @@
         return select;
     }
 
+    function showRandomizeButton() {
+      document.querySelector('.randomize').hidden = false;
+    }
+
+    function randomize() {
+        var enabledCheckboxes = document.querySelectorAll('.randomize input:checked');
+        var categories = [...enabledCheckboxes].map(checkbox => checkbox.name);
+        
+        if(categories.includes('Body')) {
+            selectedBody = selectRandomOption('Body');
+        }
+        if(categories.includes('Outfit')) {
+            selectedOutfit = selectRandomOption('Outfit');
+        }
+        if(categories.includes('Hair')) {
+            selectedHair = selectRandomOption('Hair', true);
+        }
+        if(categories.includes('Eyes')) {
+            selectedEye = selectRandomOption('Eye');
+        }
+        if(categories.includes('Accs')) {
+            selectedAccessories = selectRandomOption('Accs', true);
+        }
+        draw();
+    }
+
+    function selectRandomOption(category, includeNA = false) {
+        var select = document.getElementById(`select${category}`)
+        if(!select) {
+          return 0;
+        }
+        var items = select.getElementsByTagName('option');
+        var index = Math.floor(Math.random() * (items.length - 1));
+        if(!includeNA) {
+            index += 1;
+        }
+
+        select.selectedIndex = index;
+        return index;
+    }
 
     function generateResource(arr, path, file) {
         switch (path[2]) {
@@ -279,6 +325,10 @@
         background-color: white;
         color: black;
         font-size: 25px;
+    }
+
+    .randomize {
+        font-size: 18px;
     }
 
     .dark-mode {
