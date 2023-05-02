@@ -8,9 +8,11 @@ A tools to generate character based on https://limezu.itch.io/moderninteriors as
 # Instructions 
 
 1. Ensure generator.html is located in Modern_Interiors/2_Characters folder
-2. Open Generator.html
-3. Click Choose files to import the assets
-4. Voila!
+2. Navigate to the folder in a terminal
+3. Run `python3 -m http.server`
+4. Navigate to `localhost:8000` in a browser
+5. Click Choose files to import the assets
+6. Voila!
 
 [Video Demo](https://youtu.be/_nkbxQ6HYCY)
 # Screenshot 

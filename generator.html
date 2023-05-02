@@ -9,9 +9,11 @@
 <details>
     <summary>Instructions:</summary>
     <p>1. Ensure Generator.html is located in Modern_Interiors/2_Characters folder</p>
-    <p>2. Open Generator.html</p>
-    <p>3. Click Choose files to import the assets</p>
-    <p>4. Voila!</p>
+    <p>2. Navigate to that folder in the terminal.</p>
+    <p>3. Run `python 3 -m http.server`</p>
+    <p>4. Navigate to localhost:8000 in a browser.
+    <p>5. Click Choose files to import the assets</p>
+    <p>6. Voila!</p>
 </details>
 <br/>
 <label class="btn btn-primary">Select Character_Generator =>
@@ -28,7 +30,7 @@
     Eyes: <input type="checkbox" name="Eyes" checked/>
     Accs: <input type="checkbox" name="Accs" checked/>
 </div>
-<p>Right click to save</p>
+<input type="button" id="saveBtn" onclick="saveButtonPressed()" value="Save" disabled />
 <canvas id="canvas"></canvas>
 
 <script>
@@ -76,6 +78,7 @@
         sort();
         initializeOptions();
         showRandomizeButton();
+        enableSaveButton();
         draw();
     }
 
@@ -312,11 +315,33 @@
 </script>
 
 <script>
-
+    
     function toggleDarkMode() {
         var element = document.body;
         element.classList.toggle("dark-mode");
     }
+    
+</script>
+    
+<script>
+    
+    function saveButtonPressed() {
+        var link = document.createElement("a");
+        link.setAttribute('download', 'charactergenerator.png');
+        var btn = document.getElementById("saveBtn");
+        var canvas = document.getElementById("canvas");
+        canvas.toBlob(function(blob) {
+            var url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.click();
+        });
+    }
+
+    function enableSaveButton() {
+        var btn = document.getElementById("saveBtn");
+        btn.disabled = false;
+    }
+    
 </script>
 </body>
 <style>
